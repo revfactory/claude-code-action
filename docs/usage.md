@@ -1,6 +1,6 @@
-# Usage
+# 사용법
 
-Add a workflow file to your repository (e.g., `.github/workflows/claude.yml`):
+저장소에 워크플로우 파일을 추가하세요 (예: `.github/workflows/claude.yml`):
 
 ```yaml
 name: Claude Assistant
@@ -21,98 +21,98 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Or use OAuth token instead:
+          # 또는 OAuth 토큰을 대신 사용:
           # claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # Optional: provide a prompt for automation workflows
+          # 선택 사항: 자동화 워크플로우를 위한 프롬프트 제공
           # prompt: "Review this PR for security issues"
 
-          # Optional: pass advanced arguments to Claude CLI
+          # 선택 사항: Claude CLI에 고급 인자 전달
           # claude_args: |
           #   --max-turns 10
           #   --model claude-4-0-sonnet-20250805
 
-          # Optional: add custom plugin marketplaces
+          # 선택 사항: 커스텀 플러그인 마켓플레이스 추가
           # plugin_marketplaces: "https://github.com/user/marketplace1.git\nhttps://github.com/user/marketplace2.git"
-          # Optional: install Claude Code plugins
+          # 선택 사항: Claude Code 플러그인 설치
           # plugins: "code-review@claude-code-plugins\nfeature-dev@claude-code-plugins"
 
-          # Optional: add custom trigger phrase (default: @claude)
+          # 선택 사항: 커스텀 트리거 문구 추가 (기본값: @claude)
           # trigger_phrase: "/claude"
-          # Optional: add assignee trigger for issues
+          # 선택 사항: 이슈에 대한 담당자 트리거 추가
           # assignee_trigger: "claude"
-          # Optional: add label trigger for issues
+          # 선택 사항: 이슈에 대한 라벨 트리거 추가
           # label_trigger: "claude"
-          # Optional: grant additional permissions (requires corresponding GitHub token permissions)
+          # 선택 사항: 추가 권한 부여 (해당하는 GitHub 토큰 권한 필요)
           # additional_permissions: |
           #   actions: read
-          # Optional: allow bot users to trigger the action
+          # 선택 사항: 봇 사용자의 Action 트리거 허용
           # allowed_bots: "dependabot[bot],renovate[bot]"
 ```
 
-## Inputs
+## 입력값
 
-| Input                            | Description                                                                                                                                                                            | Required | Default       |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------- |
-| `anthropic_api_key`              | Anthropic API key (required for direct API, not needed for Bedrock/Vertex)                                                                                                             | No\*     | -             |
-| `claude_code_oauth_token`        | Claude Code OAuth token (alternative to anthropic_api_key)                                                                                                                             | No\*     | -             |
-| `prompt`                         | Instructions for Claude. Can be a direct prompt or custom template for automation workflows                                                                                            | No       | -             |
-| `track_progress`                 | Force tag mode with tracking comments. Only works with specific PR/issue events. Preserves GitHub context                                                                              | No       | `false`       |
-| `include_fix_links`              | Include 'Fix this' links in PR code review feedback that open Claude Code with context to fix the identified issue                                                                     | No       | `true`        |
-| `claude_args`                    | Additional [arguments to pass directly to Claude CLI](https://docs.claude.com/en/docs/claude-code/cli-reference#cli-flags) (e.g., `--max-turns 10 --model claude-4-0-sonnet-20250805`) | No       | ""            |
-| `base_branch`                    | The base branch to use for creating new branches (e.g., 'main', 'develop')                                                                                                             | No       | -             |
-| `use_sticky_comment`             | Use just one comment to deliver PR comments (only applies for pull_request event workflows)                                                                                            | No       | `false`       |
-| `github_token`                   | GitHub token for Claude to operate with. **Only include this if you're connecting a custom GitHub app of your own!**                                                                   | No       | -             |
-| `use_bedrock`                    | Use Amazon Bedrock with OIDC authentication instead of direct Anthropic API                                                                                                            | No       | `false`       |
-| `use_vertex`                     | Use Google Vertex AI with OIDC authentication instead of direct Anthropic API                                                                                                          | No       | `false`       |
-| `assignee_trigger`               | The assignee username that triggers the action (e.g. @claude). Only used for issue assignment                                                                                          | No       | -             |
-| `label_trigger`                  | The label name that triggers the action when applied to an issue (e.g. "claude")                                                                                                       | No       | -             |
-| `trigger_phrase`                 | The trigger phrase to look for in comments, issue/PR bodies, and issue titles                                                                                                          | No       | `@claude`     |
-| `branch_prefix`                  | The prefix to use for Claude branches (defaults to 'claude/', use 'claude-' for dash format)                                                                                           | No       | `claude/`     |
-| `settings`                       | Claude Code settings as JSON string or path to settings JSON file                                                                                                                      | No       | ""            |
-| `additional_permissions`         | Additional permissions to enable. Currently supports 'actions: read' for viewing workflow results                                                                                      | No       | ""            |
-| `use_commit_signing`             | Enable commit signing using GitHub's API. Simple but cannot perform complex git operations like rebasing. See [Security](./security.md#commit-signing)                                 | No       | `false`       |
-| `ssh_signing_key`                | SSH private key for signing commits. Enables signed commits with full git CLI support (rebasing, etc.). See [Security](./security.md#commit-signing)                                   | No       | ""            |
-| `bot_id`                         | GitHub user ID to use for git operations (defaults to Claude's bot ID). Required with `ssh_signing_key` for verified commits                                                           | No       | `41898282`    |
-| `bot_name`                       | GitHub username to use for git operations (defaults to Claude's bot name). Required with `ssh_signing_key` for verified commits                                                        | No       | `claude[bot]` |
-| `allowed_bots`                   | Comma-separated list of allowed bot usernames, or '\*' to allow all bots. Empty string (default) allows no bots                                                                        | No       | ""            |
-| `allowed_non_write_users`        | **⚠️ RISKY**: Comma-separated list of usernames to allow without write permissions, or '\*' for all users. Only works with `github_token` input. See [Security](./security.md)         | No       | ""            |
-| `path_to_claude_code_executable` | Optional path to a custom Claude Code executable. Skips automatic installation. Useful for Nix, custom containers, or specialized environments                                         | No       | ""            |
-| `path_to_bun_executable`         | Optional path to a custom Bun executable. Skips automatic Bun installation. Useful for Nix, custom containers, or specialized environments                                             | No       | ""            |
-| `plugin_marketplaces`            | Newline-separated list of Claude Code plugin marketplace Git URLs to install from (e.g., see example in workflow above). Marketplaces are added before plugin installation             | No       | ""            |
-| `plugins`                        | Newline-separated list of Claude Code plugin names to install (e.g., see example in workflow above). Plugins are installed before Claude Code execution                                | No       | ""            |
+| 입력값                           | 설명                                                                                                                                                                                   | 필수 여부 | 기본값        |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ------------- |
+| `anthropic_api_key`              | Anthropic API 키 (직접 API 사용 시 필수, Bedrock/Vertex 사용 시 불필요)                                                                                                                | 아니요\*  | -             |
+| `claude_code_oauth_token`        | Claude Code OAuth 토큰 (anthropic_api_key의 대안)                                                                                                                                     | 아니요\*  | -             |
+| `prompt`                         | Claude에 대한 지시 사항. 직접 프롬프트 또는 자동화 워크플로우를 위한 커스텀 템플릿 가능                                                                                                 | 아니요    | -             |
+| `track_progress`                 | 추적 댓글이 포함된 태그 모드를 강제합니다. 특정 PR/이슈 이벤트에서만 동작합니다. GitHub 컨텍스트를 유지합니다                                                                            | 아니요    | `false`       |
+| `include_fix_links`              | PR 코드 리뷰 피드백에 'Fix this' 링크를 포함하여 식별된 문제를 수정하기 위한 컨텍스트와 함께 Claude Code를 엽니다                                                                       | 아니요    | `true`        |
+| `claude_args`                    | [Claude CLI에 직접 전달할 추가 인자](https://docs.claude.com/en/docs/claude-code/cli-reference#cli-flags) (예: `--max-turns 10 --model claude-4-0-sonnet-20250805`)                     | 아니요    | ""            |
+| `base_branch`                    | 새 브랜치를 생성할 때 사용할 기본 브랜치 (예: 'main', 'develop')                                                                                                                       | 아니요    | -             |
+| `use_sticky_comment`             | PR 댓글 전달 시 하나의 댓글만 사용합니다 (pull_request 이벤트 워크플로우에만 적용)                                                                                                      | 아니요    | `false`       |
+| `github_token`                   | Claude가 사용할 GitHub 토큰. **자체 커스텀 GitHub 앱을 연결하는 경우에만 포함하세요!**                                                                                                  | 아니요    | -             |
+| `use_bedrock`                    | 직접 Anthropic API 대신 OIDC 인증을 사용하는 Amazon Bedrock 사용                                                                                                                       | 아니요    | `false`       |
+| `use_vertex`                     | 직접 Anthropic API 대신 OIDC 인증을 사용하는 Google Vertex AI 사용                                                                                                                     | 아니요    | `false`       |
+| `assignee_trigger`               | Action을 트리거하는 담당자 사용자명 (예: @claude). 이슈 할당에만 사용됩니다                                                                                                             | 아니요    | -             |
+| `label_trigger`                  | 이슈에 적용될 때 Action을 트리거하는 라벨 이름 (예: "claude")                                                                                                                          | 아니요    | -             |
+| `trigger_phrase`                 | 댓글, 이슈/PR 본문, 이슈 제목에서 찾을 트리거 문구                                                                                                                                     | 아니요    | `@claude`     |
+| `branch_prefix`                  | Claude 브랜치에 사용할 접두사 (기본값 'claude/', 대시 형식은 'claude-' 사용)                                                                                                            | 아니요    | `claude/`     |
+| `settings`                       | JSON 문자열 또는 설정 JSON 파일 경로로 된 Claude Code 설정                                                                                                                             | 아니요    | ""            |
+| `additional_permissions`         | 활성화할 추가 권한. 현재 워크플로우 결과 조회를 위한 'actions: read'를 지원합니다                                                                                                       | 아니요    | ""            |
+| `use_commit_signing`             | GitHub API를 사용한 커밋 서명을 활성화합니다. 간단하지만 리베이스와 같은 복잡한 git 작업은 수행할 수 없습니다. [보안](./security.ko.md#commit-signing) 참조                               | 아니요    | `false`       |
+| `ssh_signing_key`                | 커밋 서명을 위한 SSH 개인 키. 전체 git CLI 지원(리베이스 등)이 가능한 서명된 커밋을 활성화합니다. [보안](./security.ko.md#commit-signing) 참조                                           | 아니요    | ""            |
+| `bot_id`                         | git 작업에 사용할 GitHub 사용자 ID (기본값은 Claude의 봇 ID). 인증된 커밋을 위해 `ssh_signing_key`와 함께 필요합니다                                                                    | 아니요    | `41898282`    |
+| `bot_name`                       | git 작업에 사용할 GitHub 사용자명 (기본값은 Claude의 봇 이름). 인증된 커밋을 위해 `ssh_signing_key`와 함께 필요합니다                                                                   | 아니요    | `claude[bot]` |
+| `allowed_bots`                   | 허용할 봇 사용자명의 쉼표 구분 목록, 또는 모든 봇을 허용하려면 '\*'. 빈 문자열(기본값)은 봇을 허용하지 않습니다                                                                         | 아니요    | ""            |
+| `allowed_non_write_users`        | **⚠️ 위험**: 쓰기 권한 없이 허용할 사용자명의 쉼표 구분 목록, 또는 모든 사용자에 대해 '\*'. `github_token` 입력값과 함께만 동작합니다. [보안](./security.ko.md) 참조                     | 아니요    | ""            |
+| `path_to_claude_code_executable` | 커스텀 Claude Code 실행 파일의 선택적 경로. 자동 설치를 건너뜁니다. Nix, 커스텀 컨테이너 또는 특수 환경에 유용합니다                                                                    | 아니요    | ""            |
+| `path_to_bun_executable`         | 커스텀 Bun 실행 파일의 선택적 경로. 자동 Bun 설치를 건너뜁니다. Nix, 커스텀 컨테이너 또는 특수 환경에 유용합니다                                                                        | 아니요    | ""            |
+| `plugin_marketplaces`            | 설치할 Claude Code 플러그인 마켓플레이스 Git URL의 줄바꿈 구분 목록 (예: 위 워크플로우 예제 참조). 마켓플레이스는 플러그인 설치 전에 추가됩니다                                          | 아니요    | ""            |
+| `plugins`                        | 설치할 Claude Code 플러그인 이름의 줄바꿈 구분 목록 (예: 위 워크플로우 예제 참조). 플러그인은 Claude Code 실행 전에 설치됩니다                                                          | 아니요    | ""            |
 
-### Deprecated Inputs
+### 지원 종료 예정 입력값
 
-These inputs are deprecated and will be removed in a future version:
+이 입력값들은 지원 종료 예정이며 향후 버전에서 제거될 예정입니다:
 
-| Input                 | Description                                                                                  | Migration Path                                                 |
-| --------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `mode`                | **DEPRECATED**: Mode is now automatically detected based on workflow context                 | Remove this input; the action auto-detects the correct mode    |
-| `direct_prompt`       | **DEPRECATED**: Use `prompt` instead                                                         | Replace with `prompt`                                          |
-| `override_prompt`     | **DEPRECATED**: Use `prompt` with template variables or `claude_args` with `--system-prompt` | Use `prompt` for templates or `claude_args` for system prompts |
-| `custom_instructions` | **DEPRECATED**: Use `claude_args` with `--system-prompt` or include in `prompt`              | Move instructions to `prompt` or use `claude_args`             |
-| `max_turns`           | **DEPRECATED**: Use `claude_args` with `--max-turns` instead                                 | Use `claude_args: "--max-turns 5"`                             |
-| `model`               | **DEPRECATED**: Use `claude_args` with `--model` instead                                     | Use `claude_args: "--model claude-4-0-sonnet-20250805"`        |
-| `fallback_model`      | **DEPRECATED**: Use `claude_args` with fallback configuration                                | Configure fallback in `claude_args` or `settings`              |
-| `allowed_tools`       | **DEPRECATED**: Use `claude_args` with `--allowedTools` instead                              | Use `claude_args: "--allowedTools Edit,Read,Write"`            |
-| `disallowed_tools`    | **DEPRECATED**: Use `claude_args` with `--disallowedTools` instead                           | Use `claude_args: "--disallowedTools WebSearch"`               |
-| `mcp_config`          | **DEPRECATED**: Use `claude_args` with `--mcp-config` instead                                | Use `claude_args: "--mcp-config '{...}'"`                      |
-| `claude_env`          | **DEPRECATED**: Use `settings` with env configuration                                        | Configure environment in `settings` JSON                       |
+| 입력값                | 설명                                                                                          | 마이그레이션 방법                                              |
+| --------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `mode`                | **지원 종료 예정**: 모드는 이제 워크플로우 컨텍스트를 기반으로 자동 감지됩니다                 | 이 입력값을 제거하세요. Action이 올바른 모드를 자동 감지합니다  |
+| `direct_prompt`       | **지원 종료 예정**: 대신 `prompt`를 사용하세요                                                 | `prompt`로 대체하세요                                          |
+| `override_prompt`     | **지원 종료 예정**: 템플릿 변수와 함께 `prompt`를 사용하거나 `claude_args`에 `--system-prompt`를 사용하세요 | 템플릿에는 `prompt`를, 시스템 프롬프트에는 `claude_args`를 사용하세요 |
+| `custom_instructions` | **지원 종료 예정**: `claude_args`에 `--system-prompt`를 사용하거나 `prompt`에 포함하세요        | 지시 사항을 `prompt`로 이동하거나 `claude_args`를 사용하세요   |
+| `max_turns`           | **지원 종료 예정**: 대신 `claude_args`에 `--max-turns`를 사용하세요                            | `claude_args: "--max-turns 5"` 사용                            |
+| `model`               | **지원 종료 예정**: 대신 `claude_args`에 `--model`을 사용하세요                                | `claude_args: "--model claude-4-0-sonnet-20250805"` 사용       |
+| `fallback_model`      | **지원 종료 예정**: `claude_args`에 폴백 구성을 사용하세요                                     | `claude_args` 또는 `settings`에서 폴백을 구성하세요            |
+| `allowed_tools`       | **지원 종료 예정**: 대신 `claude_args`에 `--allowedTools`를 사용하세요                         | `claude_args: "--allowedTools Edit,Read,Write"` 사용           |
+| `disallowed_tools`    | **지원 종료 예정**: 대신 `claude_args`에 `--disallowedTools`를 사용하세요                      | `claude_args: "--disallowedTools WebSearch"` 사용              |
+| `mcp_config`          | **지원 종료 예정**: 대신 `claude_args`에 `--mcp-config`를 사용하세요                           | `claude_args: "--mcp-config '{...}'"` 사용                     |
+| `claude_env`          | **지원 종료 예정**: `settings`에 환경 구성을 사용하세요                                        | `settings` JSON에서 환경을 구성하세요                          |
 
-\*Required when using direct Anthropic API (default and when not using Bedrock or Vertex)
+\*직접 Anthropic API 사용 시 필수 (기본값이며 Bedrock 또는 Vertex를 사용하지 않는 경우)
 
-> **Note**: This action is currently in beta. Features and APIs may change as we continue to improve the integration.
+> **참고**: 이 Action은 현재 베타 단계입니다. 통합을 지속적으로 개선함에 따라 기능과 API가 변경될 수 있습니다.
 
-## Upgrading from v0.x?
+## v0.x에서 업그레이드하시나요?
 
-For a comprehensive guide on migrating from v0.x to v1.0, including step-by-step instructions and examples, see our **[Migration Guide](./migration-guide.md)**.
+v0.x에서 v1.0으로의 마이그레이션에 대한 단계별 지침과 예제를 포함한 종합 가이드는 **[마이그레이션 가이드](./migration-guide.ko.md)**를 참조하세요.
 
-### Quick Migration Examples
+### 빠른 마이그레이션 예제
 
-#### Interactive Workflows (with @claude mentions)
+#### 대화형 워크플로우 (@claude 멘션 사용)
 
-**Before (v0.x):**
+**이전 (v0.x):**
 
 ```yaml
 - uses: anthropics/claude-code-action@beta
@@ -123,7 +123,7 @@ For a comprehensive guide on migrating from v0.x to v1.0, including step-by-step
     max_turns: "10"
 ```
 
-**After (v1.0):**
+**이후 (v1.0):**
 
 ```yaml
 - uses: anthropics/claude-code-action@v1
@@ -134,9 +134,9 @@ For a comprehensive guide on migrating from v0.x to v1.0, including step-by-step
       --system-prompt "Focus on security"
 ```
 
-#### Automation Workflows
+#### 자동화 워크플로우
 
-**Before (v0.x):**
+**이전 (v0.x):**
 
 ```yaml
 - uses: anthropics/claude-code-action@beta
@@ -148,7 +148,7 @@ For a comprehensive guide on migrating from v0.x to v1.0, including step-by-step
     allowed_tools: "Edit,Read,Write"
 ```
 
-**After (v1.0):**
+**이후 (v1.0):**
 
 ```yaml
 - uses: anthropics/claude-code-action@v1
@@ -164,9 +164,9 @@ For a comprehensive guide on migrating from v0.x to v1.0, including step-by-step
       --allowedTools Edit,Read,Write
 ```
 
-#### Custom Templates
+#### 커스텀 템플릿
 
-**Before (v0.x):**
+**이전 (v0.x):**
 
 ```yaml
 - uses: anthropics/claude-code-action@beta
@@ -176,7 +176,7 @@ For a comprehensive guide on migrating from v0.x to v1.0, including step-by-step
       Focus on: $CHANGED_FILES
 ```
 
-**After (v1.0):**
+**이후 (v1.0):**
 
 ```yaml
 - uses: anthropics/claude-code-action@v1
@@ -186,11 +186,11 @@ For a comprehensive guide on migrating from v0.x to v1.0, including step-by-step
       Focus on the changed files in this PR.
 ```
 
-## Structured Outputs
+## 구조화된 출력
 
-Get validated JSON results from Claude that automatically become GitHub Action outputs. This enables building complex automation workflows where Claude analyzes data and subsequent steps use the results.
+Claude로부터 검증된 JSON 결과를 받아 자동으로 GitHub Action 출력값으로 사용할 수 있습니다. 이를 통해 Claude가 데이터를 분석하고 후속 단계에서 그 결과를 사용하는 복잡한 자동화 워크플로우를 구축할 수 있습니다.
 
-### Basic Example
+### 기본 예제
 
 ```yaml
 - name: Detect flaky tests
@@ -209,18 +209,18 @@ Get validated JSON results from Claude that automatically become GitHub Action o
   run: gh workflow run CI
 ```
 
-### How It Works
+### 작동 방식
 
-1. **Define Schema**: Provide a JSON schema via `--json-schema` flag in `claude_args`
-2. **Claude Executes**: Claude uses tools to complete your task
-3. **Validated Output**: Result is validated against your schema
-4. **JSON Output**: All fields are returned in a single `structured_output` JSON string
+1. **스키마 정의**: `claude_args`의 `--json-schema` 플래그를 통해 JSON 스키마를 제공합니다
+2. **Claude 실행**: Claude가 도구를 사용하여 작업을 완료합니다
+3. **검증된 출력**: 결과가 제공한 스키마에 대해 검증됩니다
+4. **JSON 출력**: 모든 필드가 단일 `structured_output` JSON 문자열로 반환됩니다
 
-### Accessing Structured Outputs
+### 구조화된 출력 접근하기
 
-All structured output fields are available in the `structured_output` output as a JSON string:
+모든 구조화된 출력 필드는 `structured_output` 출력값에서 JSON 문자열로 사용할 수 있습니다:
 
-**In GitHub Actions expressions:**
+**GitHub Actions 표현식에서:**
 
 ```yaml
 if: fromJSON(steps.analyze.outputs.structured_output).is_flaky == true
@@ -228,7 +228,7 @@ run: |
   CONFIDENCE=${{ fromJSON(steps.analyze.outputs.structured_output).confidence }}
 ```
 
-**In bash with jq:**
+**bash에서 jq 사용:**
 
 ```yaml
 - name: Process results
@@ -238,62 +238,62 @@ run: |
     SUMMARY=$(echo "$OUTPUT" | jq -r '.summary')
 ```
 
-**Note**: Due to GitHub Actions limitations, composite actions cannot expose dynamic outputs. All fields are bundled in the single `structured_output` JSON string.
+**참고**: GitHub Actions의 제한 사항으로 인해 복합 액션은 동적 출력값을 노출할 수 없습니다. 모든 필드는 단일 `structured_output` JSON 문자열에 묶여 있습니다.
 
-### Complete Example
+### 전체 예제
 
-See `examples/test-failure-analysis.yml` for a working example that:
+작동하는 예제는 `examples/test-failure-analysis.yml`을 참조하세요. 이 예제는 다음을 수행합니다:
 
-- Detects flaky test failures
-- Uses confidence thresholds in conditionals
-- Auto-retries workflows
-- Comments on PRs
+- 불안정한 테스트 실패 감지
+- 조건문에서 신뢰도 임계값 사용
+- 워크플로우 자동 재시도
+- PR에 댓글 작성
 
-### Documentation
+### 문서
 
-For complete details on JSON Schema syntax and Agent SDK structured outputs:
+JSON Schema 구문 및 Agent SDK 구조화된 출력에 대한 전체 내용은 다음을 참조하세요:
 https://docs.claude.com/en/docs/agent-sdk/structured-outputs
 
-## Ways to Tag @claude
+## @claude를 태그하는 방법
 
-These examples show how to interact with Claude using comments in PRs and issues. By default, Claude will be triggered anytime you mention `@claude`, but you can customize the exact trigger phrase using the `trigger_phrase` input in the workflow.
+다음 예제들은 PR과 이슈에서 댓글을 사용하여 Claude와 상호작용하는 방법을 보여줍니다. 기본적으로 `@claude`를 멘션하면 Claude가 트리거되지만, 워크플로우에서 `trigger_phrase` 입력값을 사용하여 정확한 트리거 문구를 커스터마이즈할 수 있습니다.
 
-Claude will see the full PR context, including any comments.
+Claude는 댓글을 포함한 전체 PR 컨텍스트를 볼 수 있습니다.
 
-### Ask Questions
+### 질문하기
 
-Add a comment to a PR or issue:
+PR 또는 이슈에 댓글을 추가하세요:
 
 ```
 @claude What does this function do and how could we improve it?
 ```
 
-Claude will analyze the code and provide a detailed explanation with suggestions.
+Claude가 코드를 분석하고 개선 제안과 함께 상세한 설명을 제공합니다.
 
-### Request Fixes
+### 수정 요청
 
-Ask Claude to implement specific changes:
+Claude에게 특정 변경 사항을 구현하도록 요청하세요:
 
 ```
 @claude Can you add error handling to this function?
 ```
 
-### Code Review
+### 코드 리뷰
 
-Get a thorough review:
+철저한 리뷰를 받으세요:
 
 ```
 @claude Please review this PR and suggest improvements
 ```
 
-Claude will analyze the changes and provide feedback.
+Claude가 변경 사항을 분석하고 피드백을 제공합니다.
 
-### Fix Bugs from Screenshots
+### 스크린샷으로 버그 수정
 
-Upload a screenshot of a bug and ask Claude to fix it:
+버그 스크린샷을 업로드하고 Claude에게 수정을 요청하세요:
 
 ```
 @claude Here's a screenshot of a bug I'm seeing [upload screenshot]. Can you fix it?
 ```
 
-Claude can see and analyze images, making it easy to fix visual bugs or UI issues.
+Claude는 이미지를 보고 분석할 수 있어 시각적 버그나 UI 문제를 쉽게 수정할 수 있습니다.

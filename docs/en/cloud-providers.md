@@ -1,62 +1,62 @@
-# 클라우드 제공자
+# Cloud Providers
 
-다음 네 가지 방법 중 하나를 사용하여 Claude 인증을 수행할 수 있습니다:
+You can authenticate with Claude using any of these four methods:
 
-1. 직접 Anthropic API 사용 (기본값)
-2. OIDC 인증을 통한 Amazon Bedrock
-3. OIDC 인증을 통한 Google Vertex AI
-4. OIDC 인증을 통한 Microsoft Foundry
+1. Direct Anthropic API (default)
+2. Amazon Bedrock with OIDC authentication
+3. Google Vertex AI with OIDC authentication
+4. Microsoft Foundry with OIDC authentication
 
-AWS Bedrock 및 Google Vertex AI의 상세한 설정 방법은 [공식 문서](https://code.claude.com/docs/en/github-actions#for-aws-bedrock:)를 참고하세요.
+For detailed setup instructions for AWS Bedrock and Google Vertex AI, see the [official documentation](https://code.claude.com/docs/en/github-actions#for-aws-bedrock:).
 
-**참고**:
+**Note**:
 
-- Bedrock, Vertex, Microsoft Foundry는 OIDC 인증만 지원합니다
-- AWS Bedrock은 특정 모델에 대해 교차 리전 추론 프로필을 자동으로 사용합니다
-- 교차 리전 추론 프로필 모델의 경우, 해당 추론 프로필이 사용하는 모든 리전에서 Claude 모델에 대한 접근 권한을 요청하고 승인받아야 합니다
+- Bedrock, Vertex, and Microsoft Foundry use OIDC authentication exclusively
+- AWS Bedrock automatically uses cross-region inference profiles for certain models
+- For cross-region inference profile models, you need to request and be granted access to the Claude models in all regions that the inference profile uses
 
-## 모델 설정
+## Model Configuration
 
-선택한 제공자에 따라 제공자별 모델 이름을 사용하세요:
+Use provider-specific model names based on your chosen provider:
 
 ```yaml
-# 직접 Anthropic API 사용 시 (기본값)
+# For direct Anthropic API (default)
 - uses: anthropics/claude-code-action@v1
   with:
     anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-    # ... 기타 입력값
+    # ... other inputs
 
-# OIDC를 사용한 Amazon Bedrock
+# For Amazon Bedrock with OIDC
 - uses: anthropics/claude-code-action@v1
   with:
     use_bedrock: "true"
     claude_args: |
       --model anthropic.claude-4-0-sonnet-20250805-v1:0
-    # ... 기타 입력값
+    # ... other inputs
 
-# OIDC를 사용한 Google Vertex AI
+# For Google Vertex AI with OIDC
 - uses: anthropics/claude-code-action@v1
   with:
     use_vertex: "true"
     claude_args: |
       --model claude-4-0-sonnet@20250805
-    # ... 기타 입력값
+    # ... other inputs
 
-# OIDC를 사용한 Microsoft Foundry
+# For Microsoft Foundry with OIDC
 - uses: anthropics/claude-code-action@v1
   with:
     use_foundry: "true"
     claude_args: |
       --model claude-sonnet-4-5
-    # ... 기타 입력값
+    # ... other inputs
 ```
 
-## 클라우드 제공자를 위한 OIDC 인증
+## OIDC Authentication for Cloud Providers
 
-AWS Bedrock, GCP Vertex AI, Microsoft Foundry는 모두 OIDC 인증을 지원합니다.
+AWS Bedrock, GCP Vertex AI, and Microsoft Foundry all support OIDC authentication.
 
 ```yaml
-# OIDC를 사용한 AWS Bedrock
+# For AWS Bedrock with OIDC
 - name: Configure AWS Credentials (OIDC)
   uses: aws-actions/configure-aws-credentials@v4
   with:
@@ -75,14 +75,14 @@ AWS Bedrock, GCP Vertex AI, Microsoft Foundry는 모두 OIDC 인증을 지원합
     use_bedrock: "true"
     claude_args: |
       --model anthropic.claude-4-0-sonnet-20250805-v1:0
-    # ... 기타 입력값
+    # ... other inputs
 
   permissions:
-    id-token: write # OIDC에 필요
+    id-token: write # Required for OIDC
 ```
 
 ```yaml
-# OIDC를 사용한 GCP Vertex AI
+# For GCP Vertex AI with OIDC
 - name: Authenticate to Google Cloud
   uses: google-github-actions/auth@v2
   with:
@@ -101,14 +101,14 @@ AWS Bedrock, GCP Vertex AI, Microsoft Foundry는 모두 OIDC 인증을 지원합
     use_vertex: "true"
     claude_args: |
       --model claude-4-0-sonnet@20250805
-    # ... 기타 입력값
+    # ... other inputs
 
   permissions:
-    id-token: write # OIDC에 필요
+    id-token: write # Required for OIDC
 ```
 
 ```yaml
-# OIDC를 사용한 Microsoft Foundry
+# For Microsoft Foundry with OIDC
 - name: Authenticate to Azure
   uses: azure/login@v2
   with:
@@ -128,14 +128,14 @@ AWS Bedrock, GCP Vertex AI, Microsoft Foundry는 모두 OIDC 인증을 지원합
     use_foundry: "true"
     claude_args: |
       --model claude-sonnet-4-5
-    # ... 기타 입력값
+    # ... other inputs
   env:
     ANTHROPIC_FOUNDRY_BASE_URL: https://my-resource.services.ai.azure.com
 
 permissions:
-  id-token: write # OIDC에 필요
+  id-token: write # Required for OIDC
 ```
 
-## Microsoft Foundry 설정
+## Microsoft Foundry Setup
 
-Microsoft Foundry의 상세한 설정 방법은 [공식 문서](https://docs.anthropic.com/en/docs/claude-code/microsoft-foundry)를 참고하세요.
+For detailed setup instructions for Microsoft Foundry, see the [official documentation](https://docs.anthropic.com/en/docs/claude-code/microsoft-foundry).

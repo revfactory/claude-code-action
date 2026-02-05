@@ -1,25 +1,25 @@
-# 솔루션 및 활용 사례
+# Solutions & Use Cases
 
-이 가이드는 Claude Code Action을 활용한 일반적인 자동화 시나리오에 대해 바로 사용할 수 있는 완전한 솔루션을 제공합니다. 각 솔루션에는 작동하는 예제, 설정 세부사항, 예상 결과가 포함되어 있습니다.
+This guide provides complete, ready-to-use solutions for common automation scenarios with Claude Code Action. Each solution includes working examples, configuration details, and expected outcomes.
 
-## 📋 목차
+## 📋 Table of Contents
 
-- [자동 PR 코드 리뷰](#automatic-pr-code-review)
-- [특정 파일 경로만 리뷰](#review-only-specific-file-paths)
-- [외부 기여자의 PR 리뷰](#review-prs-from-external-contributors)
-- [커스텀 PR 리뷰 체크리스트](#custom-pr-review-checklist)
-- [예약된 저장소 유지보수](#scheduled-repository-maintenance)
-- [이슈 자동 분류 및 라벨링](#issue-auto-triage-and-labeling)
-- [API 변경 시 문서 동기화](#documentation-sync-on-api-changes)
-- [보안 중심 PR 리뷰](#security-focused-pr-reviews)
+- [Automatic PR Code Review](#automatic-pr-code-review)
+- [Review Only Specific File Paths](#review-only-specific-file-paths)
+- [Review PRs from External Contributors](#review-prs-from-external-contributors)
+- [Custom PR Review Checklist](#custom-pr-review-checklist)
+- [Scheduled Repository Maintenance](#scheduled-repository-maintenance)
+- [Issue Auto-Triage and Labeling](#issue-auto-triage-and-labeling)
+- [Documentation Sync on API Changes](#documentation-sync-on-api-changes)
+- [Security-Focused PR Reviews](#security-focused-pr-reviews)
 
 ---
 
-## 자동 PR 코드 리뷰
+## Automatic PR Code Review
 
-**사용 시기:** 저장소에 열리거나 업데이트되는 모든 PR을 자동으로 리뷰하고 싶을 때 사용하세요.
+**When to use:** Automatically review every PR opened or updated in your repository.
 
-### 기본 예제 (추적 없음)
+### Basic Example (No Tracking)
 
 ```yaml
 name: Claude Auto Review
@@ -62,18 +62,18 @@ jobs:
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
 ```
 
-**주요 설정:**
+**Key Configuration:**
 
-- `opened` 및 `synchronize` (새 커밋)에서 트리거됩니다
-- 컨텍스트를 위해 항상 `REPO`와 `PR NUMBER`를 포함하세요
-- 댓글 작성 및 리뷰를 위한 도구를 지정하세요
-- PR 브랜치는 사전에 체크아웃되어 있습니다
+- Triggers on `opened` and `synchronize` (new commits)
+- Always include `REPO` and `PR NUMBER` for context
+- Specify tools for commenting and reviewing
+- PR branch is pre-checked out
 
-**예상 결과:** Claude가 적절한 곳에 인라인 어노테이션을 포함하여 PR에 직접 리뷰 댓글을 게시합니다.
+**Expected Output:** Claude posts review comments directly to the PR with inline annotations where appropriate.
 
-### 향상된 예제 (진행 상황 추적 포함)
+### Enhanced Example (With Progress Tracking)
 
-PR 리뷰에 시각적 진행 상황 추적을 원하시나요? `track_progress: true`를 사용하면 v0.x에서와 같은 추적 댓글을 받을 수 있습니다:
+Want visual progress tracking for PR reviews? Use `track_progress: true` to get tracking comments like in v0.x:
 
 ```yaml
 name: Claude Auto Review with Tracking
@@ -113,27 +113,27 @@ jobs:
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
 ```
 
-**진행 상황 추적의 장점:**
+**Benefits of Progress Tracking:**
 
-- **시각적 진행 표시기**: 체크박스와 함께 "진행 중" 상태를 표시합니다
-- **전체 컨텍스트 보존**: PR 세부사항, 댓글, 첨부파일을 모두 자동으로 포함합니다
-- **마이그레이션 친화적**: 추적 댓글이 필요한 v0.x에서 전환하는 팀에 적합합니다
-- **커스텀 프롬프트와 호환**: GitHub 컨텍스트를 유지하면서 프롬프트가 커스텀 지시사항으로 적용됩니다
+- **Visual Progress Indicators**: Shows "In progress" status with checkboxes
+- **Preserves Full Context**: Automatically includes all PR details, comments, and attachments
+- **Migration-Friendly**: Perfect for teams moving from v0.x who miss tracking comments
+- **Works with Custom Prompts**: Your prompt becomes custom instructions while maintaining GitHub context
 
-**예상 결과:**
+**Expected Output:**
 
-1. Claude가 추적 댓글을 생성합니다: "Claude Code is reviewing this pull request..."
-2. 작업이 진행되면서 진행 상황 체크박스가 업데이트됩니다
-3. 인라인 어노테이션과 함께 상세한 리뷰 피드백을 게시합니다
-4. 완료 시 추적 댓글이 "Completed"로 업데이트됩니다
+1. Claude creates a tracking comment: "Claude Code is reviewing this pull request..."
+2. Updates the comment with progress checkboxes as it works
+3. Posts detailed review feedback with inline annotations
+4. Updates tracking comment to "Completed" when done
 
 ---
 
-## 특정 파일 경로만 리뷰
+## Review Only Specific File Paths
 
-**사용 시기:** 특정 중요 파일이 변경된 경우에만 PR을 리뷰하고 싶을 때 사용하세요.
+**When to use:** Review PRs only when specific critical files change.
 
-**전체 예제:**
+**Complete Example:**
 
 ```yaml
 name: Review Critical Files
@@ -180,21 +180,21 @@ jobs:
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*)"
 ```
 
-**주요 설정:**
+**Key Configuration:**
 
-- `paths:` 필터가 특정 파일 변경에 대해서만 트리거합니다
-- 민감한 영역에 대해 보안 중심의 커스텀 프롬프트를 사용합니다
-- 컴플라이언스 또는 보안 리뷰에 유용합니다
+- `paths:` filter triggers only for specific file changes
+- Custom prompt emphasizes security for sensitive areas
+- Useful for compliance or security reviews
 
-**예상 결과:** 중요 파일이 수정되었을 때 보안 중심의 리뷰가 수행됩니다.
+**Expected Output:** Security-focused review when critical files are modified.
 
 ---
 
-## 외부 기여자의 PR 리뷰
+## Review PRs from External Contributors
 
-**사용 시기:** 외부 또는 신규 기여자에게 더 엄격한 리뷰 기준을 적용하고 싶을 때 사용하세요.
+**When to use:** Apply stricter review criteria for external or new contributors.
 
-**전체 예제:**
+**Complete Example:**
 
 ```yaml
 name: External Contributor Review
@@ -238,21 +238,21 @@ jobs:
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr view:*)"
 ```
 
-**주요 설정:**
+**Key Configuration:**
 
-- `if:` 조건으로 특정 기여자 유형을 대상으로 합니다
-- 컨텍스트에 기여자 사용자명을 포함합니다
-- 온보딩과 표준 준수에 중점을 둡니다
+- `if:` condition targets specific contributor types
+- Includes contributor username in context
+- Emphasis on onboarding and standards
 
-**예상 결과:** 신규 기여자가 프로젝트 표준을 이해할 수 있도록 돕는 상세한 리뷰가 제공됩니다.
+**Expected Output:** Detailed review helping new contributors understand project standards.
 
 ---
 
-## 커스텀 PR 리뷰 체크리스트
+## Custom PR Review Checklist
 
-**사용 시기:** 팀 워크플로우에 맞는 특정 리뷰 기준을 적용하고 싶을 때 사용하세요.
+**When to use:** Enforce specific review criteria for your team's workflow.
 
-**전체 예제:**
+**Complete Example:**
 
 ```yaml
 name: PR Review Checklist
@@ -312,21 +312,21 @@ jobs:
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*)"
 ```
 
-**주요 설정:**
+**Key Configuration:**
 
-- 프롬프트에 구조화된 체크리스트가 포함되어 있습니다
-- 체계적인 리뷰 접근 방식을 사용합니다
-- 팀별 맞춤 기준을 적용합니다
+- Structured checklist in prompt
+- Systematic review approach
+- Team-specific criteria
 
-**예상 결과:** 체크리스트 결과와 구체적인 피드백이 포함된 체계적인 리뷰가 제공됩니다.
+**Expected Output:** Systematic review with checklist results and specific feedback.
 
 ---
 
-## 예약된 저장소 유지보수
+## Scheduled Repository Maintenance
 
-**사용 시기:** 정기적인 자동 유지보수 작업을 수행하고 싶을 때 사용하세요.
+**When to use:** Regular automated maintenance tasks.
 
-**전체 예제:**
+**Complete Example:**
 
 ```yaml
 name: Weekly Maintenance
@@ -369,21 +369,21 @@ jobs:
             --allowedTools "Read,Bash(npm:*),Bash(gh issue:*),Bash(git:*)"
 ```
 
-**주요 설정:**
+**Key Configuration:**
 
-- `schedule:`로 자동 실행을 설정합니다
-- `workflow_dispatch:`로 수동 트리거를 지원합니다
-- 분석을 위한 포괄적인 도구 권한을 부여합니다
+- `schedule:` for automated runs
+- `workflow_dispatch:` for manual triggering
+- Comprehensive tool permissions for analysis
 
-**예상 결과:** 주간 유지보수 보고서가 GitHub 이슈로 생성됩니다.
+**Expected Output:** Weekly maintenance report as GitHub issue.
 
 ---
 
-## 이슈 자동 분류 및 라벨링
+## Issue Auto-Triage and Labeling
 
-**사용 시기:** 새로운 이슈를 자동으로 분류하고 우선순위를 지정하고 싶을 때 사용하세요.
+**When to use:** Automatically categorize and prioritize new issues.
 
-**전체 예제:**
+**Complete Example:**
 
 ```yaml
 name: Issue Triage
@@ -423,21 +423,21 @@ jobs:
             --allowedTools "Bash(gh issue:*),Bash(gh search:*)"
 ```
 
-**주요 설정:**
+**Key Configuration:**
 
-- 새 이슈 생성 시 트리거됩니다
-- 프롬프트에 이슈 컨텍스트가 포함됩니다
-- 라벨 관리 기능을 제공합니다
+- Triggered on new issues
+- Issue context in prompt
+- Label management capabilities
 
-**예상 결과:** 이슈가 자동으로 라벨링되고 분류됩니다.
+**Expected Output:** Automatically labeled and categorized issues.
 
 ---
 
-## API 변경 시 문서 동기화
+## Documentation Sync on API Changes
 
-**사용 시기:** API 코드가 변경될 때 문서를 최신 상태로 유지하고 싶을 때 사용하세요.
+**When to use:** Keep docs up-to-date when API code changes.
 
-**전체 예제:**
+**Complete Example:**
 
 ```yaml
 name: Sync API Documentation
@@ -482,21 +482,21 @@ jobs:
             --allowedTools "Read,Write,Edit,Bash(git:*)"
 ```
 
-**주요 설정:**
+**Key Configuration:**
 
-- 경로 기반 트리거를 사용합니다
-- 문서 업데이트를 위한 쓰기 권한이 부여됩니다
-- 커밋을 위한 Git 도구가 제공됩니다
+- Path-specific trigger
+- Write permissions for doc updates
+- Git tools for committing
 
-**예상 결과:** API 문서가 코드 변경과 함께 자동으로 업데이트됩니다.
+**Expected Output:** API documentation automatically updated with code changes.
 
 ---
 
-## 보안 중심 PR 리뷰
+## Security-Focused PR Reviews
 
-**사용 시기:** 민감한 저장소에 대해 심층적인 보안 분석을 수행하고 싶을 때 사용하세요.
+**When to use:** Deep security analysis for sensitive repositories.
 
-**전체 예제:**
+**Complete Example:**
 
 ```yaml
 name: Security Review
@@ -554,38 +554,38 @@ jobs:
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*)"
 ```
 
-**주요 설정:**
+**Key Configuration:**
 
-- 보안 중심의 프롬프트 구조를 사용합니다
-- OWASP 기준에 맞추어 분석합니다
-- 심각도 등급 시스템을 적용합니다
+- Security-focused prompt structure
+- OWASP alignment
+- Severity rating system
 
-**예상 결과:** 우선순위가 지정된 발견 사항이 포함된 상세한 보안 분석이 제공됩니다.
+**Expected Output:** Detailed security analysis with prioritized findings.
 
 ---
 
-## 모든 솔루션을 위한 팁
+## Tips for All Solutions
 
-### 항상 GitHub 컨텍스트를 포함하세요
+### Always Include GitHub Context
 
 ```yaml
 prompt: |
   REPO: ${{ github.repository }}
   PR NUMBER: ${{ github.event.pull_request.number }}
-  [구체적인 지시사항]
+  [Your specific instructions]
 ```
 
-### 일반적인 도구 권한
+### Common Tool Permissions
 
-- **PR 댓글**: `Bash(gh pr comment:*)`
-- **인라인 댓글**: `mcp__github_inline_comment__create_inline_comment`
-- **파일 작업**: `Read,Write,Edit`
-- **Git 작업**: `Bash(git:*)`
+- **PR Comments**: `Bash(gh pr comment:*)`
+- **Inline Comments**: `mcp__github_inline_comment__create_inline_comment`
+- **File Operations**: `Read,Write,Edit`
+- **Git Operations**: `Bash(git:*)`
 
-### 모범 사례
+### Best Practices
 
-- 프롬프트를 구체적으로 작성하세요
-- 예상 출력 형식을 포함하세요
-- 명확한 성공 기준을 설정하세요
-- 저장소에 대한 컨텍스트를 제공하세요
-- 코드별 피드백에는 인라인 댓글을 사용하세요
+- Be specific in your prompts
+- Include expected output format
+- Set clear success criteria
+- Provide context about the repository
+- Use inline comments for code-specific feedback

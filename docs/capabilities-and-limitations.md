@@ -1,33 +1,33 @@
-# Capabilities and Limitations
+# 기능 및 제한 사항
 
-## What Claude Can Do
+## Claude가 할 수 있는 것
 
-- **Respond in a Single Comment**: Claude operates by updating a single initial comment with progress and results
-- **Answer Questions**: Analyze code and provide explanations
-- **Implement Code Changes**: Make simple to moderate code changes based on requests
-- **Prepare Pull Requests**: Creates commits on a branch and links back to a prefilled PR creation page
-- **Perform Code Reviews**: Analyze PR changes and provide detailed feedback
-- **Smart Branch Handling**:
-  - When triggered on an **issue**: Always creates a new branch for the work
-  - When triggered on an **open PR**: Always pushes directly to the existing PR branch
-  - When triggered on a **closed PR**: Creates a new branch since the original is no longer active
-- **View GitHub Actions Results**: Can access workflow runs, job logs, and test results on the PR where it's tagged when `actions: read` permission is configured (see [Additional Permissions for CI/CD Integration](./configuration.md#additional-permissions-for-cicd-integration))
+- **단일 댓글로 응답**: Claude는 하나의 초기 댓글을 업데이트하며 진행 상황과 결과를 표시합니다
+- **질문에 답변**: 코드를 분석하고 설명을 제공합니다
+- **코드 변경 구현**: 요청에 따라 간단한 수준부터 중간 수준까지의 코드 변경을 수행합니다
+- **Pull Request 준비**: 브랜치에 커밋을 생성하고, 미리 채워진 PR 생성 페이지로 연결합니다
+- **코드 리뷰 수행**: PR 변경 사항을 분석하고 상세한 피드백을 제공합니다
+- **스마트 브랜치 처리**:
+  - **이슈**에서 트리거된 경우: 항상 작업을 위한 새 브랜치를 생성합니다
+  - **열린 PR**에서 트리거된 경우: 항상 기존 PR 브랜치에 직접 푸시합니다
+  - **닫힌 PR**에서 트리거된 경우: 원래 브랜치가 더 이상 활성 상태가 아니므로 새 브랜치를 생성합니다
+- **GitHub Actions 결과 조회**: `actions: read` 권한이 설정된 경우, 태그된 PR의 워크플로우 실행, 작업 로그 및 테스트 결과에 접근할 수 있습니다 ([CI/CD 통합을 위한 추가 권한](./configuration.md#additional-permissions-for-cicd-integration) 참조)
 
-## What Claude Cannot Do
+## Claude가 할 수 없는 것
 
-- **Submit PR Reviews**: Claude cannot submit formal GitHub PR reviews
-- **Approve PRs**: For security reasons, Claude cannot approve pull requests
-- **Post Multiple Comments**: Claude only acts by updating its initial comment
-- **Execute Commands Outside Its Context**: Claude only has access to the repository and PR/issue context it's triggered in
-- **Run Arbitrary Bash Commands**: By default, Claude cannot execute Bash commands unless explicitly allowed using the `allowed_tools` configuration
-- **Perform Branch Operations**: Cannot merge branches, rebase, or perform other git operations beyond pushing commits
+- **PR 리뷰 제출**: Claude는 공식적인 GitHub PR 리뷰를 제출할 수 없습니다
+- **PR 승인**: 보안상의 이유로 Claude는 Pull Request를 승인할 수 없습니다
+- **여러 댓글 게시**: Claude는 초기 댓글을 업데이트하는 방식으로만 동작합니다
+- **컨텍스트 외부에서 명령 실행**: Claude는 트리거된 저장소와 PR/이슈 컨텍스트에만 접근할 수 있습니다
+- **임의의 Bash 명령 실행**: 기본적으로 Claude는 `allowed_tools` 설정을 통해 명시적으로 허용하지 않는 한 Bash 명령을 실행할 수 없습니다
+- **브랜치 작업 수행**: 커밋 푸시 외에 브랜치 병합, 리베이스 또는 기타 git 작업을 수행할 수 없습니다
 
-## How It Works
+## 작동 방식
 
-1. **Trigger Detection**: Listens for comments containing the trigger phrase (default: `@claude`) or issue assignment to a specific user
-2. **Context Gathering**: Analyzes the PR/issue, comments, code changes
-3. **Smart Responses**: Either answers questions or implements changes
-4. **Branch Management**: Creates new PRs for human authors, pushes directly for Claude's own PRs
-5. **Communication**: Posts updates at every step to keep you informed
+1. **트리거 감지**: 트리거 문구(기본값: `@claude`)가 포함된 댓글 또는 특정 사용자에게 이슈가 할당되는 것을 감지합니다
+2. **컨텍스트 수집**: PR/이슈, 댓글, 코드 변경 사항을 분석합니다
+3. **스마트 응답**: 질문에 답변하거나 변경 사항을 구현합니다
+4. **브랜치 관리**: 사람이 작성한 경우 새 PR을 생성하고, Claude 자체 PR인 경우 직접 푸시합니다
+5. **커뮤니케이션**: 모든 단계에서 업데이트를 게시하여 진행 상황을 알려드립니다
 
-This action is built on top of [`anthropics/claude-code-base-action`](https://github.com/anthropics/claude-code-base-action).
+이 액션은 [`anthropics/claude-code-base-action`](https://github.com/anthropics/claude-code-base-action)을 기반으로 구축되었습니다.
