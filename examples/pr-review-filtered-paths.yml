@@ -1,28 +1,32 @@
+# 특정 파일 경로가 변경되었을 때만 Claude 코드 리뷰를 실행하는 워크플로우
 name: Claude Review - Path Specific
 
 on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      # Only run when specific paths are modified
+      # 특정 경로가 수정되었을 때만 실행
       - "src/**/*.js"
       - "src/**/*.ts"
       - "api/**/*.py"
-      # You can add more specific patterns as needed
+      # 필요에 따라 더 구체적인 패턴을 추가할 수 있습니다
 
 jobs:
   claude-review-paths:
     runs-on: ubuntu-latest
+    # 필요한 권한 설정
     permissions:
       contents: read
       pull-requests: read
       id-token: write
     steps:
+      # 리포지토리 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
+      # Claude를 사용한 코드 리뷰 실행
       - name: Claude Code Review
         uses: anthropics/claude-code-action@v1
         with:
@@ -31,19 +35,20 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Please review this pull request focusing on the changed files.
+            변경된 파일을 중심으로 이 풀 리퀘스트를 리뷰해 주세요.
 
-            Note: The PR branch is already checked out in the current working directory.
+            참고: PR 브랜치는 이미 현재 작업 디렉토리에 체크아웃되어 있습니다.
 
-            Provide feedback on:
-            - Code quality and adherence to best practices
-            - Potential bugs or edge cases
-            - Performance considerations
-            - Security implications
-            - Suggestions for improvement
+            다음 항목에 대해 피드백을 제공해 주세요:
+            - 코드 품질 및 모범 사례 준수 여부
+            - 잠재적인 버그 또는 엣지 케이스
+            - 성능 관련 고려 사항
+            - 보안 관련 영향
+            - 개선을 위한 제안 사항
 
-            Since this PR touches critical source code paths, please be thorough
-            in your review and provide inline comments where appropriate.
+            이 PR은 핵심 소스 코드 경로를 수정하므로, 철저하게 리뷰하고
+            적절한 위치에 인라인 코멘트를 남겨 주세요.
 
+          # Claude가 사용할 수 있는 도구를 제한합니다 (인라인 코멘트, PR 코멘트, diff 조회, PR 조회)
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*), Bash(gh pr diff:*), Bash(gh pr view:*)"

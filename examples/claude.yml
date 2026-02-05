@@ -1,55 +1,66 @@
+# Claude Code GitHub Action 워크플로우
+# 이슈, PR 댓글, 리뷰에서 @claude를 멘션하면 Claude가 자동으로 응답합니다.
 name: Claude Code
 
+# 워크플로우를 트리거하는 GitHub 이벤트 설정
 on:
+  # 이슈에 댓글이 작성되었을 때
   issue_comment:
     types: [created]
+  # PR 리뷰 댓글이 작성되었을 때
   pull_request_review_comment:
     types: [created]
+  # 이슈가 생성되거나 담당자가 지정되었을 때
   issues:
     types: [opened, assigned]
+  # PR 리뷰가 제출되었을 때
   pull_request_review:
     types: [submitted]
 
 jobs:
   claude:
+    # 이벤트 본문에 '@claude' 멘션이 포함된 경우에만 실행
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
+    # 워크플로우에 필요한 권한 설정
     permissions:
       contents: write
       pull-requests: write
       issues: write
       id-token: write
-      actions: read # Required for Claude to read CI results on PRs
+      actions: read # Claude가 PR의 CI 결과를 읽기 위해 필요
     steps:
+      # 저장소 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
+      # Claude Code 액션 실행
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
-          # Optional: Customize the trigger phrase (default: @claude)
+          # 선택사항: 트리거 문구를 커스터마이즈 (기본값: @claude)
           # trigger_phrase: "/claude"
 
-          # Optional: Trigger when specific user is assigned to an issue
+          # 선택사항: 특정 사용자가 이슈에 담당자로 지정되었을 때 트리거
           # assignee_trigger: "claude-bot"
 
-          # Optional: Configure Claude's behavior with CLI arguments
+          # 선택사항: CLI 인수를 통해 Claude의 동작을 설정
           # claude_args: |
           #   --model claude-opus-4-1-20250805
           #   --max-turns 10
           #   --allowedTools "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
           #   --system-prompt "Follow our coding standards. Ensure all new code has tests. Use TypeScript for new files."
 
-          # Optional: Advanced settings configuration
+          # 선택사항: 고급 설정 구성
           # settings: |
           #   {
           #     "env": {

@@ -1,27 +1,33 @@
+# 특정 작성자의 PR에 대해 Claude 코드 리뷰를 자동으로 실행하는 워크플로우
 name: Claude Review - Specific Authors
 
+# PR이 생성되거나 새 커밋이 푸시될 때 트리거
 on:
   pull_request:
     types: [opened, synchronize]
 
 jobs:
   review-by-author:
-    # Only run for PRs from specific authors
+    # 특정 작성자가 올린 PR에 대해서만 실행
+    # 필요에 따라 작성자 목록을 수정하세요
     if: |
       github.event.pull_request.user.login == 'developer1' ||
       github.event.pull_request.user.login == 'developer2' ||
       github.event.pull_request.user.login == 'external-contributor'
     runs-on: ubuntu-latest
+    # 필요한 권한 설정
     permissions:
       contents: read
       pull-requests: read
       id-token: write
     steps:
+      # 리포지토리 체크아웃 (얕은 클론으로 빠르게 가져오기)
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
+      # Claude를 사용하여 PR 리뷰 수행
       - name: Review PR from Specific Author
         uses: anthropics/claude-code-action@v1
         with:
@@ -30,19 +36,20 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Please provide a thorough review of this pull request.
+            이 풀 리퀘스트에 대해 철저한 리뷰를 수행해 주세요.
 
-            Note: The PR branch is already checked out in the current working directory.
+            참고: PR 브랜치는 이미 현재 작업 디렉토리에 체크아웃되어 있습니다.
 
-            Since this is from a specific author that requires careful review,
-            please pay extra attention to:
-            - Adherence to project coding standards
-            - Proper error handling
-            - Security best practices
-            - Test coverage
-            - Documentation
+            이 PR은 세밀한 리뷰가 필요한 특정 작성자의 PR이므로,
+            다음 사항에 특별히 주의를 기울여 주세요:
+            - 프로젝트 코딩 표준 준수 여부
+            - 적절한 에러 처리
+            - 보안 모범 사례
+            - 테스트 커버리지
+            - 문서화
 
-            Provide detailed feedback and suggestions for improvement.
+            상세한 피드백과 개선 제안을 제공해 주세요.
 
+          # Claude가 사용할 수 있는 도구를 제한하여 인라인 코멘트 및 PR 관련 명령만 허용
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*), Bash(gh pr diff:*), Bash(gh pr view:*)"

@@ -1,5 +1,8 @@
+# 이슈가 생성될 때 Claude를 사용하여 자동으로 분류하는 워크플로우
 name: Claude Issue Triage
 description: Run Claude Code for issue triage in GitHub Actions
+
+# 새로운 이슈가 열릴 때 트리거됨
 on:
   issues:
     types: [opened]
@@ -8,22 +11,29 @@ jobs:
   triage-issue:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # 이슈 분류에 필요한 권한 설정
     permissions:
-      contents: read
-      issues: write
+      contents: read # 저장소 내용을 읽기 위한 권한
+      issues: write # 이슈에 라벨을 추가하기 위한 쓰기 권한
 
     steps:
+      # 저장소를 체크아웃하여 .claude/commands 디렉토리에 접근할 수 있도록 함
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
+      # Claude Code를 실행하여 이슈를 분류하고 라벨을 지정함
       - name: Run Claude Code for Issue Triage
         uses: anthropics/claude-code-action@v1
         with:
-          # NOTE: /label-issue here requires a .claude/commands/label-issue.md file in your repo (see this repo's .claude directory for an example)
+          # 참고: /label-issue 명령어를 사용하려면 저장소에 .claude/commands/label-issue.md 파일이 필요합니다
+          # (예시는 이 저장소의 .claude 디렉토리를 참고하세요)
           prompt: "/label-issue REPO: ${{ github.repository }} ISSUE_NUMBER${{ github.event.issue.number }}"
 
+          # Anthropic API 인증 키
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          allowed_non_write_users: "*" # Required for issue triage workflow, if users without repo write access create issues
+          # 쓰기 권한이 없는 사용자도 이슈를 생성할 수 있도록 허용 (이슈 분류 워크플로우에 필수)
+          allowed_non_write_users: "*"
+          # GitHub API 접근을 위한 토큰
           github_token: ${{ secrets.GITHUB_TOKEN }}

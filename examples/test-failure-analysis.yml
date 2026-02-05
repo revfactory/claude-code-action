@@ -1,15 +1,16 @@
 name: Auto-Retry Flaky Tests
 
-# This example demonstrates using structured outputs to detect flaky test failures
-# and automatically retry them, reducing noise from intermittent failures.
+# 이 예제는 구조화된 출력을 사용하여 불안정한(flaky) 테스트 실패를 감지하고
+# 자동으로 재시도하여 간헐적 실패로 인한 노이즈를 줄이는 방법을 보여줍니다.
 #
-# Use case: When CI fails, automatically determine if it's likely flaky and retry if so.
+# 사용 사례: CI가 실패했을 때, 불안정한 테스트인지 자동으로 판별하고 해당되면 재시도합니다.
 
 on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
 
+# 권한 설정: 저장소 읽기 및 워크플로우 재실행을 위한 actions 쓰기 권한 필요
 permissions:
   contents: read
   actions: write
@@ -17,36 +18,40 @@ permissions:
 jobs:
   detect-flaky:
     runs-on: ubuntu-latest
+    # CI 워크플로우가 실패한 경우에만 실행
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     steps:
+      # 저장소 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Claude를 사용하여 불안정한 테스트 실패 여부를 감지하는 핵심 단계
+      # 구조화된 JSON 출력으로 is_flaky, confidence, summary를 반환
       - name: Detect flaky test failures
         id: detect
         uses: anthropics/claude-code-action@main
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
-            The CI workflow failed: ${{ github.event.workflow_run.html_url }}
+            CI 워크플로우가 실패했습니다: ${{ github.event.workflow_run.html_url }}
 
-            Check the logs: gh run view ${{ github.event.workflow_run.id }} --log-failed
+            로그를 확인하세요: gh run view ${{ github.event.workflow_run.id }} --log-failed
 
-            Determine if this looks like a flaky test failure by checking for:
-            - Timeout errors
-            - Race conditions
-            - Network errors
-            - "Expected X but got Y" intermittent failures
-            - Tests that passed in previous commits
+            다음 항목을 확인하여 불안정한(flaky) 테스트 실패인지 판별하세요:
+            - 타임아웃 오류
+            - 경쟁 조건(Race condition)
+            - 네트워크 오류
+            - "Expected X but got Y" 같은 간헐적 실패
+            - 이전 커밋에서는 통과했던 테스트
 
-            Return:
-            - is_flaky: true if likely flaky, false if real bug
-            - confidence: number 0-1 indicating confidence level
-            - summary: brief one-sentence explanation
+            다음을 반환하세요:
+            - is_flaky: 불안정한 테스트일 가능성이 있으면 true, 실제 버그이면 false
+            - confidence: 판별 신뢰도를 나타내는 0~1 사이의 숫자
+            - summary: 실패 원인에 대한 간단한 한 줄 설명
           claude_args: |
             --json-schema '{"type":"object","properties":{"is_flaky":{"type":"boolean","description":"Whether this appears to be a flaky test failure"},"confidence":{"type":"number","minimum":0,"maximum":1,"description":"Confidence level in the determination"},"summary":{"type":"string","description":"One-sentence explanation of the failure"}},"required":["is_flaky","confidence","summary"]}'
 
-      # Auto-retry only if flaky AND high confidence (>= 0.7)
+      # 불안정한 테스트로 판별되고 신뢰도가 높은 경우(>= 0.7)에만 자동 재시도
       - name: Retry flaky tests
         if: |
           fromJSON(steps.detect.outputs.structured_output).is_flaky == true &&
@@ -63,10 +68,11 @@ jobs:
           echo ""
           echo "Triggering automatic retry..."
 
+          # 실패한 워크플로우를 동일 브랜치에서 재실행
           gh workflow run "${{ github.event.workflow_run.name }}" \
             --ref "${{ github.event.workflow_run.head_branch }}"
 
-      # Low confidence flaky detection - skip retry
+      # 불안정한 테스트로 의심되지만 신뢰도가 낮은 경우 - 재시도하지 않음
       - name: Low confidence detection
         if: |
           fromJSON(steps.detect.outputs.structured_output).is_flaky == true &&
@@ -78,7 +84,7 @@ jobs:
           echo "⚠️ Possible flaky test but confidence too low ($CONFIDENCE)"
           echo "Not retrying automatically - manual review recommended"
 
-      # Comment on PR if this was a PR build
+      # PR 빌드인 경우 분석 결과를 PR에 코멘트로 남김
       - name: Comment on PR
         if: github.event.workflow_run.event == 'pull_request'
         env:
@@ -89,9 +95,11 @@ jobs:
           CONFIDENCE=$(echo "$OUTPUT" | jq -r '.confidence')
           SUMMARY=$(echo "$OUTPUT" | jq -r '.summary')
 
+          # 해당 브랜치의 PR 번호를 조회
           pr_number=$(gh pr list --head "${{ github.event.workflow_run.head_branch }}" --json number --jq '.[0].number')
 
           if [ -n "$pr_number" ]; then
+            # 불안정한 테스트 여부에 따라 코멘트 제목과 조치 내용을 설정
             if [ "$IS_FLAKY" = "true" ]; then
               TITLE="🔄 Flaky Test Detected"
               ACTION="✅ Automatically retrying the workflow"

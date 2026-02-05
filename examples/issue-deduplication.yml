@@ -1,5 +1,8 @@
+# 이슈 중복 검사 워크플로우
+# 새로운 이슈가 생성될 때 기존 이슈와 중복 여부를 자동으로 확인합니다.
 name: Issue Deduplication
 
+# 새 이슈가 열릴 때 트리거
 on:
   issues:
     types: [opened]
@@ -8,56 +11,60 @@ jobs:
   deduplicate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # 필요한 권한 설정: 이슈 읽기/쓰기 및 OIDC 토큰
     permissions:
       contents: read
       issues: write
       id-token: write
 
     steps:
+      # 저장소 코드를 체크아웃합니다
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
+      # Claude를 사용하여 중복 이슈를 검사합니다
       - name: Check for duplicate issues
         uses: anthropics/claude-code-action@v1
         with:
           prompt: |
-            Analyze this new issue and check if it's a duplicate of existing issues in the repository.
+            이 새로운 이슈를 분석하고 저장소의 기존 이슈와 중복되는지 확인하세요.
 
-            Issue: #${{ github.event.issue.number }}
-            Repository: ${{ github.repository }}
+            이슈: #${{ github.event.issue.number }}
+            저장소: ${{ github.repository }}
 
-            Your task:
-            1. Use mcp__github__get_issue to get details of the current issue (#${{ github.event.issue.number }})
-            2. Search for similar existing issues using mcp__github__search_issues with relevant keywords from the issue title and body
-            3. Compare the new issue with existing ones to identify potential duplicates
+            수행할 작업:
+            1. mcp__github__get_issue를 사용하여 현재 이슈(#${{ github.event.issue.number }})의 세부 정보를 가져오세요
+            2. mcp__github__search_issues를 사용하여 이슈 제목과 본문에서 관련 키워드로 유사한 기존 이슈를 검색하세요
+            3. 새 이슈와 기존 이슈를 비교하여 잠재적인 중복을 식별하세요
 
-            Criteria for duplicates:
-            - Same bug or error being reported
-            - Same feature request (even if worded differently)
-            - Same question being asked
-            - Issues describing the same root problem
+            중복 판단 기준:
+            - 동일한 버그 또는 오류가 보고된 경우
+            - 동일한 기능 요청인 경우 (표현이 다르더라도)
+            - 동일한 질문이 제기된 경우
+            - 동일한 근본 원인의 문제를 설명하는 경우
 
-            If you find duplicates:
-            - Add a comment on the new issue linking to the original issue(s)
-            - Apply a "duplicate" label to the new issue
-            - Be polite and explain why it's a duplicate
-            - Suggest the user follow the original issue for updates
+            중복이 발견된 경우:
+            - 새 이슈에 원본 이슈 링크를 포함한 댓글을 추가하세요
+            - 새 이슈에 "duplicate" 라벨을 적용하세요
+            - 정중하게 중복 사유를 설명하세요
+            - 사용자에게 원본 이슈를 팔로우하도록 안내하세요
 
-            If it's NOT a duplicate:
-            - Don't add any comments
-            - You may apply appropriate topic labels based on the issue content
+            중복이 아닌 경우:
+            - 댓글을 추가하지 마세요
+            - 이슈 내용에 따라 적절한 주제 라벨을 적용할 수 있습니다
 
-            Use these tools:
-            - mcp__github__get_issue: Get issue details
-            - mcp__github__search_issues: Search for similar issues
-            - mcp__github__list_issues: List recent issues if needed
-            - mcp__github__create_issue_comment: Add a comment if duplicate found
-            - mcp__github__update_issue: Add labels
+            사용할 도구:
+            - mcp__github__get_issue: 이슈 세부 정보 가져오기
+            - mcp__github__search_issues: 유사한 이슈 검색
+            - mcp__github__list_issues: 필요한 경우 최근 이슈 목록 조회
+            - mcp__github__create_issue_comment: 중복 발견 시 댓글 추가
+            - mcp__github__update_issue: 라벨 추가
 
-            Be thorough but efficient. Focus on finding true duplicates, not just similar issues.
+            철저하되 효율적으로 작업하세요. 단순히 유사한 이슈가 아닌 진정한 중복 이슈를 찾는 데 집중하세요.
 
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # 중복 검사에 필요한 GitHub MCP 도구만 허용
           claude_args: |
             --allowedTools "mcp__github__get_issue,mcp__github__search_issues,mcp__github__list_issues,mcp__github__create_issue_comment,mcp__github__update_issue,mcp__github__get_issue_comments"

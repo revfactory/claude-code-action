@@ -1,26 +1,32 @@
+# CI 실패 시 Claude가 자동으로 수정 브랜치를 생성하는 워크플로우
 name: Auto Fix CI Failures
 
+# CI 워크플로우가 완료될 때 트리거
 on:
   workflow_run:
     workflows: ["CI"]
     types:
       - completed
 
+# 필요한 권한 설정
 permissions:
-  contents: write
-  pull-requests: write
-  actions: read
-  issues: write
-  id-token: write # Required for OIDC token exchange
+  contents: write # 코드 변경 및 브랜치 생성에 필요
+  pull-requests: write # PR 생성 및 코멘트 작성에 필요
+  actions: read # 워크플로우 실행 로그 조회에 필요
+  issues: write # 이슈 코멘트 작성에 필요
+  id-token: write # OIDC 토큰 교환에 필요
 
 jobs:
   auto-fix:
+    # 조건: CI가 실패했고, PR이 존재하며, 자동 수정 브랜치가 아닌 경우에만 실행
+    # (무한 루프 방지를 위해 claude-auto-fix-ci- 접두사 브랜치는 제외)
     if: |
       github.event.workflow_run.conclusion == 'failure' &&
       github.event.workflow_run.pull_requests[0] &&
       !startsWith(github.event.workflow_run.head_branch, 'claude-auto-fix-ci-')
     runs-on: ubuntu-latest
     steps:
+      # 실패한 CI의 소스 브랜치를 체크아웃
       - name: Checkout code
         uses: actions/checkout@v6
         with:
@@ -28,11 +34,13 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Git 커밋을 위한 사용자 정보 설정
       - name: Setup git identity
         run: |
           git config --global user.email "claude[bot]@users.noreply.github.com"
           git config --global user.name "claude[bot]"
 
+      # 수정 사항을 반영할 새 브랜치 생성
       - name: Create fix branch
         id: branch
         run: |
@@ -40,25 +48,30 @@ jobs:
           git checkout -b "$BRANCH_NAME"
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
+      # 실패한 CI의 상세 정보(실패 작업 목록, 에러 로그 등)를 수집
       - name: Get CI failure details
         id: failure_details
         uses: actions/github-script@v7
         with:
           script: |
+            // 워크플로우 실행 정보 조회
             const run = await github.rest.actions.getWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
               run_id: ${{ github.event.workflow_run.id }}
             });
 
+            // 워크플로우 내 개별 작업 목록 조회
             const jobs = await github.rest.actions.listJobsForWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
               run_id: ${{ github.event.workflow_run.id }}
             });
 
+            // 실패한 작업만 필터링
             const failedJobs = jobs.data.jobs.filter(job => job.conclusion === 'failure');
 
+            // 실패한 각 작업의 로그를 수집
             let errorLogs = [];
             for (const job of failedJobs) {
               const logs = await github.rest.actions.downloadJobLogsForWorkflowRun({
@@ -78,20 +91,22 @@ jobs:
               errorLogs: errorLogs
             };
 
+      # Claude에게 CI 실패 정보를 전달하고 자동 수정 요청
       - name: Fix CI failures with Claude
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           prompt: |
-            /fix-ci 
-            Failed CI Run: ${{ fromJSON(steps.failure_details.outputs.result).runUrl }}
-            Failed Jobs: ${{ join(fromJSON(steps.failure_details.outputs.result).failedJobs, ', ') }}
-            PR Number: ${{ github.event.workflow_run.pull_requests[0].number }}
-            Branch Name: ${{ steps.branch.outputs.branch_name }}
-            Base Branch: ${{ github.event.workflow_run.head_branch }}
-            Repository: ${{ github.repository }}
+            /fix-ci
+            실패한 CI 실행: ${{ fromJSON(steps.failure_details.outputs.result).runUrl }}
+            실패한 작업 목록: ${{ join(fromJSON(steps.failure_details.outputs.result).failedJobs, ', ') }}
+            PR 번호: ${{ github.event.workflow_run.pull_requests[0].number }}
+            브랜치 이름: ${{ steps.branch.outputs.branch_name }}
+            기본 브랜치: ${{ github.event.workflow_run.head_branch }}
+            저장소: ${{ github.repository }}
 
-            Error logs:
+            에러 로그:
             ${{ toJSON(fromJSON(steps.failure_details.outputs.result).errorLogs) }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Claude가 사용할 수 있는 도구를 제한 (파일 편집, 읽기, 검색, Git, 빌드 도구만 허용)
           claude_args: "--allowedTools 'Edit,MultiEdit,Write,Read,Glob,Grep,LS,Bash(git:*),Bash(bun:*),Bash(npm:*),Bash(npx:*),Bash(gh:*)'"
